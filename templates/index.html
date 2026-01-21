@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Analyzer - Funktionale Programmierung</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Text Analyzer</h1>
+            <p class="subtitle">Funktionale Textverarbeitung mit Flask</p>
+        </header>
+
+        <main>
+            <section class="input-section">
+                <h2>Text eingeben</h2>
+                <textarea id="textInput" placeholder="Geben Sie hier Ihren Text ein..."></textarea>
+                <div class="button-group">
+                    <button onclick="analyzeText()">Analyse</button>
+                    <button onclick="showTransformSection()">Transformation</button>
+                    <button onclick="showFilterSection()">Filterung</button>
+                    <button onclick="showLambdaSection()">Lambda Demo</button>
+                    <button onclick="showMapFilterReduceSection()">Map/Filter/Reduce</button>
+                    <button onclick="showRefactoringSection()">Refactoring Demo</button>
+                    <button onclick="showParadigmsSection()">Paradigmen-Vergleich</button>
+                </div>
+            </section>
+
+            <!-- Analyse Section -->
+            <section id="analysisSection" class="result-section hidden">
+                <h2>Textanalyse</h2>
+                <div id="analysisResults" class="results"></div>
+            </section>
+
+            <!-- Transformation Section -->
+            <section id="transformSection" class="result-section hidden">
+                <h2>Text-Transformation</h2>
+                <div class="controls">
+                    <select id="transformType">
+                        <option value="uppercase">Großbuchstaben</option>
+                        <option value="lowercase">Kleinbuchstaben</option>
+                        <option value="capitalize">Erstes Zeichen groß</option>
+                        <option value="title">Titel-Format</option>
+                    </select>
+                    <button onclick="transformText()">Transformieren</button>
+                </div>
+                <div id="transformResults" class="results"></div>
+            </section>
+
+            <!-- Filter Section -->
+            <section id="filterSection" class="result-section hidden">
+                <h2>Text-Filterung</h2>
+                <div class="controls">
+                    <label>
+                        Mindestlänge:
+                        <input type="number" id="minLength" value="5" min="0">
+                    </label>
+                    <label>
+                        Maximallänge:
+                        <input type="number" id="maxLength" value="100" min="1">
+                    </label>
+                    <label>
+                        <input type="checkbox" id="removeDuplicates"> Duplikate entfernen
+                    </label>
+                    <button onclick="filterText()">Filtern</button>
+                </div>
+                <div id="filterResults" class="results"></div>
+            </section>
+
+            <!-- Lambda Section -->
+            <section id="lambdaSection" class="result-section hidden">
+                <h2>Lambda-Ausdrücke Demo</h2>
+                <button onclick="demoLambda()">Lambda-Transformationen anwenden</button>
+                <div id="lambdaResults" class="results"></div>
+            </section>
+
+            <!-- Map/Filter/Reduce Section -->
+            <section id="mapFilterReduceSection" class="result-section hidden">
+                <h2>Map, Filter, Reduce Demo</h2>
+                <button onclick="demoMapFilterReduce()">Datenverarbeitung starten</button>
+                <div id="mapFilterReduceResults" class="results"></div>
+            </section>
+
+            <!-- Refactoring Section -->
+            <section id="refactoringSection" class="result-section hidden">
+                <h2>Refactoring-Demonstration</h2>
+                <div class="controls">
+                    <label>
+                        Mindestlänge:
+                        <input type="number" id="refactoringMinLength" value="5" min="0">
+                    </label>
+                    <button onclick="demoRefactoring()">Refactoring-Vergleich starten</button>
+                </div>
+                <div id="refactoringResults" class="results"></div>
+            </section>
+
+            <!-- Paradigmen-Vergleich Section -->
+            <section id="paradigmsSection" class="result-section hidden">
+                <h2>Paradigmen-Vergleich (OO vs. Prozedural vs. Funktional)</h2>
+                <div class="controls">
+                    <label>
+                        Mindestlänge:
+                        <input type="number" id="paradigmsMinLength" value="5" min="0">
+                    </label>
+                    <button onclick="compareParadigms()">Paradigmen vergleichen</button>
+                </div>
+                <div id="paradigmsResults" class="results"></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Hilfsfunktion zum Anzeigen von Sektionen
+        function showSection(sectionId) {
+            document.querySelectorAll('.result-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        function showTransformSection() {
+            showSection('transformSection');
+        }
+
+        function showFilterSection() {
+            showSection('filterSection');
+        }
+
+        function showLambdaSection() {
+            showSection('lambdaSection');
+        }
+
+        function showMapFilterReduceSection() {
+            showSection('mapFilterReduceSection');
+        }
+
+        function showRefactoringSection() {
+            showSection('refactoringSection');
+        }
+
+        function showParadigmsSection() {
+            showSection('paradigmsSection');
+        }
+
+        // Analyse-Funktion
+        async function analyzeText() {
+            const text = document.getElementById('textInput').value;
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            showSection('analysisSection');
+            const resultsDiv = document.getElementById('analysisResults');
+            resultsDiv.innerHTML = '<p>Analysiere...</p>';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const analysis = data.analysis;
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Grundstatistiken</h3>
+                            <ul>
+                                <li>Wörter: ${analysis.word_count}</li>
+                                <li>Zeichen (gesamt): ${analysis.character_count}</li>
+                                <li>Zeichen (ohne Leerzeichen): ${analysis.character_count_no_spaces}</li>
+                                <li>Sätze: ${analysis.sentence_count}</li>
+                                <li>Durchschnittliche Wortlänge: ${analysis.average_word_length}</li>
+                                <li>Längstes Wort: "${analysis.longest_word}"</li>
+                                <li>Kürzestes Wort: "${analysis.shortest_word}"</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Erweiterte Analyse</h3>
+                            <ul>
+                                <li>Gesamte Wortlänge: ${data.total_word_length}</li>
+                                <li>Lange Wörter (≥5 Zeichen): ${data.long_words_count}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Top 5 häufigste Wörter</h3>
+                            <ul>
+                                ${Object.entries(data.word_frequencies).map(([word, count]) => 
+                                    `<li>"${word}": ${count}x</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        // Transformations-Funktion
+        async function transformText() {
+            const text = document.getElementById('textInput').value;
+            const transformType = document.getElementById('transformType').value;
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('transformResults');
+            resultsDiv.innerHTML = '<p>Transformiere...</p>';
+
+            try {
+                const response = await fetch('/transform', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text, type: transformType })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Original</h3>
+                            <p class="text-output">${data.original}</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Transformiert (${data.transformation_type})</h3>
+                            <p class="text-output">${data.transformed}</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Transformierte Wörter</h3>
+                            <p class="text-output">${data.transformed_words.join(' ')}</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        // Filter-Funktion
+        async function filterText() {
+            const text = document.getElementById('textInput').value;
+            const minLength = parseInt(document.getElementById('minLength').value);
+            const maxLength = parseInt(document.getElementById('maxLength').value);
+            const removeDuplicates = document.getElementById('removeDuplicates').checked;
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('filterResults');
+            resultsDiv.innerHTML = '<p>Filtere...</p>';
+
+            try {
+                const response = await fetch('/filter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        text: text, 
+                        min_length: minLength,
+                        max_length: maxLength,
+                        remove_duplicates: removeDuplicates
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Original</h3>
+                            <p class="text-output">${data.original}</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Gefiltert (Länge ≥ ${minLength})</h3>
+                            <p class="text-output">${data.filtered_by_min_length.join(', ')}</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Gefiltert (Länge ${minLength}-${maxLength})</h3>
+                            <p class="text-output">${data.filtered_by_range.join(', ')}</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Sortiert nach Länge</h3>
+                            <p class="text-output">${data.sorted_by_length.join(', ')}</p>
+                        </div>
+                        ${data.unique_words ? `
+                        <div class="result-card">
+                            <h3>Eindeutige Wörter (sortiert)</h3>
+                            <p class="text-output">${data.unique_words.join(', ')}</p>
+                        </div>
+                        ` : ''}
+                        <div class="result-card">
+                            <h3>Gesamtlänge langer Wörter</h3>
+                            <p>${data.long_words_total_length} Zeichen</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        // Lambda Demo
+        async function demoLambda() {
+            const text = document.getElementById('textInput').value;
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('lambdaResults');
+            resultsDiv.innerHTML = '<p>Wende Lambda-Transformationen an...</p>';
+
+            try {
+                const response = await fetch('/lambda/demo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Lambda-Transformationen</h3>
+                            <ul>
+                                <li><strong>Uppercase:</strong> ${data.lambda_transformations.uppercase}</li>
+                                <li><strong>Lowercase:</strong> ${data.lambda_transformations.lowercase}</li>
+                                <li><strong>Double:</strong> ${data.lambda_transformations.double}</li>
+                                <li><strong>Square Length:</strong> [${data.lambda_transformations.square_length.join(', ')}]</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Sortierungen mit Lambda</h3>
+                            <ul>
+                                <li><strong>Nach Länge:</strong> ${data.sorted_by_length.join(', ')}</li>
+                                <li><strong>Nach Länge (absteigend):</strong> ${data.sorted_by_length_desc.join(', ')}</li>
+                                <li><strong>Alphabetisch:</strong> ${data.sorted_alphabetically.join(', ')}</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        // Map/Filter/Reduce Demo
+        async function demoMapFilterReduce() {
+            const text = document.getElementById('textInput').value;
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('mapFilterReduceResults');
+            resultsDiv.innerHTML = '<p>Verarbeite Daten...</p>';
+
+            try {
+                const response = await fetch('/map-filter-reduce/demo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Map-Operationen</h3>
+                            <ul>
+                                <li><strong>Großgeschrieben:</strong> ${data.map_results.uppercased_words.join(', ')}</li>
+                                <li><strong>Wortlängen:</strong> [${data.map_results.word_lengths.join(', ')}]</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Filter-Operationen</h3>
+                            <ul>
+                                <li><strong>Lange Wörter (>5):</strong> ${data.filter_results.long_words.join(', ')}</li>
+                                <li><strong>Kurze Wörter (≤3):</strong> ${data.filter_results.short_words.join(', ')}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Reduce-Operationen</h3>
+                            <ul>
+                                <li><strong>Gesamte Wortlänge:</strong> ${data.reduce_results.total_length}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Kombinierte Operationen</h3>
+                            <ul>
+                                <li><strong>Anzahl langer Wörter:</strong> ${data.combined_results.long_words_count}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Komplexe Datenverarbeitung</h3>
+                            <p><strong>Wortfrequenzen:</strong></p>
+                            <ul>
+                                ${Object.entries(data.complex_processing.word_frequencies).map(([word, count]) => 
+                                    `<li>"${word}": ${count}x</li>`
+                                ).join('')}
+                            </ul>
+                            <p><strong>Top 10 Wörter:</strong></p>
+                            <ul>
+                                ${Object.entries(data.complex_processing.top_words).map(([word, count]) => 
+                                    `<li>"${word}": ${count}x</li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        async function demoRefactoring() {
+            const text = document.getElementById('textInput').value;
+            const minLength = parseInt(document.getElementById('refactoringMinLength').value);
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('refactoringResults');
+            resultsDiv.innerHTML = '<p>Vergleiche Refactoring...</p>';
+
+            try {
+                const response = await fetch('/refactoring/demo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text, min_length: minLength })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Vergleich: Prozedural vs. Funktional</h3>
+                            <p><strong>Ergebnis identisch:</strong> ${data.count_long_words.same_result ? 'Ja ✓' : 'Nein ✗'}</p>
+                            <ul>
+                                <li>Prozedural: ${data.count_long_words.procedural} lange Wörter</li>
+                                <li>Funktional: ${data.count_long_words.functional} lange Wörter</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Refactoring-Vorteile</h3>
+                            <ul>
+                                <li><strong>Code-Länge:</strong> ${data.refactoring_benefits.code_length.functional}</li>
+                                <li><strong>Mutation:</strong> ${data.refactoring_benefits.mutations.functional}</li>
+                                <li><strong>Testbarkeit:</strong> ${data.refactoring_benefits.testability.functional}</li>
+                                <li><strong>Lesbarkeit:</strong> ${data.refactoring_benefits.readability.functional}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Prozedurale Version</h3>
+                            <ul>
+                                <li>Wörter: ${data.process_text.procedural.word_count}</li>
+                                <li>Längstes Wort: "${data.process_text.procedural.longest_word}"</li>
+                                <li>Durchschnitt: ${data.process_text.procedural.average.toFixed(2)}</li>
+                                <li>Lange Wörter: ${data.process_text.procedural.long_words.join(', ')}</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Funktionale Version</h3>
+                            <ul>
+                                <li>Wörter: ${data.process_text.functional.word_count}</li>
+                                <li>Längstes Wort: "${data.process_text.functional.longest_word}"</li>
+                                <li>Durchschnitt: ${data.process_text.functional.average.toFixed(2)}</li>
+                                <li>Lange Wörter: ${data.process_text.functional.long_words.join(', ')}</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+
+        async function compareParadigms() {
+            const text = document.getElementById('textInput').value;
+            const minLength = parseInt(document.getElementById('paradigmsMinLength').value);
+
+            if (!text.trim()) {
+                alert('Bitte geben Sie einen Text ein');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('paradigmsResults');
+            resultsDiv.innerHTML = '<p>Vergleiche Paradigmen...</p>';
+
+            try {
+                const response = await fetch('/paradigms/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text, min_length: minLength })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    const comp = data.comparison;
+                    resultsDiv.innerHTML = `
+                        <div class="result-card">
+                            <h3>Ergebnis-Vergleich</h3>
+                            <p><strong>Alle Paradigmen liefern identisches Ergebnis:</strong> ${data.all_same_result ? 'Ja ✓' : 'Nein ✗'}</p>
+                            <ul>
+                                <li>OO: ${comp.object_oriented.count} lange Wörter</li>
+                                <li>Prozedural: ${comp.procedural.count} lange Wörter</li>
+                                <li>Funktional: ${comp.functional.count} lange Wörter</li>
+                            </ul>
+                        </div>
+                        <div class="result-card">
+                            <h3>Objektorientiert (OO)</h3>
+                            <ul>
+                                ${comp.object_oriented.characteristics.map(c => `<li>${c}</li>`).join('')}
+                            </ul>
+                            <p><strong>Ergebnis:</strong> Wörter: ${comp.object_oriented.result.word_count}, 
+                            Längstes: "${comp.object_oriented.result.longest_word}"</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Prozedural</h3>
+                            <ul>
+                                ${comp.procedural.characteristics.map(c => `<li>${c}</li>`).join('')}
+                            </ul>
+                            <p><strong>Ergebnis:</strong> Wörter: ${comp.procedural.result.word_count}, 
+                            Längstes: "${comp.procedural.result.longest_word}"</p>
+                        </div>
+                        <div class="result-card">
+                            <h3>Funktional</h3>
+                            <ul>
+                                ${comp.functional.characteristics.map(c => `<li>${c}</li>`).join('')}
+                            </ul>
+                            <p><strong>Ergebnis:</strong> Wörter: ${comp.functional.result.word_count}, 
+                            Längstes: "${comp.functional.result.longest_word}"</p>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="error">Fehler: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
