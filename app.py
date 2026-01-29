@@ -301,8 +301,8 @@ def refactoring_demo():
     procedural_count = count_long_words_procedural(text, min_length)
     functional_count = count_long_words_functional(text, min_length)
     
-    procedural_result = process_text_procedural(text)
-    functional_result = process_text_functional(text)
+    procedural_result = process_text_procedural(text, min_length)
+    functional_result = process_text_functional(text, min_length)
     
     return jsonify({
         'success': True,
@@ -354,15 +354,15 @@ def compare_paradigms():
     # OO-Version
     processor = TextProcessor(text)
     oo_count = processor.count_long_words(min_length)
-    oo_result = processor.process()
+    oo_result = processor.process(min_length)
     
     # Prozedurale Version
     proc_count = count_long_words_procedural(text, min_length)
-    proc_result = process_text_procedural(text)
+    proc_result = process_text_procedural(text, min_length)
     
     # Funktionale Version
     func_count = count_long_words_functional(text, min_length)
-    func_result = process_text_functional(text)
+    func_result = process_text_functional(text, min_length)
     
     return jsonify({
         'success': True,

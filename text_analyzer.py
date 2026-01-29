@@ -309,7 +309,7 @@ def count_long_words_procedural(text: str, min_length: int) -> int:
     words = text.split()
     count = 0
     for word in words:
-        if len(word) > min_length:
+        if len(word) >= min_length:
             count = count + 1
     return count
 
@@ -340,12 +340,12 @@ def count_long_words_functional(text: str, min_length: int) -> int:
     words = text.split()
     return reduce(
         lambda acc, w: acc + 1,
-        filter(lambda w: len(w) > min_length, words),
+        filter(lambda w: len(w) >= min_length, words),
         0
     )
 
 
-def process_text_procedural(text: str) -> Dict:
+def process_text_procedural(text: str, min_length: int = 5) -> Dict:
     """
     C1E: PROZEDURALE VERSION - Komplexe Textverarbeitung
     
@@ -380,14 +380,14 @@ def process_text_procedural(text: str) -> Dict:
     # Filtere lange Wörter
     long_words = []
     for word in words:
-        if len(word) > 5:
+        if len(word) >= min_length:
             long_words.append(word)
     result['long_words'] = long_words
     
     return result
 
 
-def process_text_functional(text: str) -> Dict:
+def process_text_functional(text: str, min_length: int = 5) -> Dict:
     """
     C1E: FUNKTIONALE VERSION - Refactored
     
@@ -410,7 +410,7 @@ def process_text_functional(text: str) -> Dict:
         'word_count': len(words),
         'longest_word': max(words, key=len) if words else "",
         'average': sum(map(len, words)) / len(words) if words else 0,
-        'long_words': list(filter(lambda w: len(w) > 5, words))
+        'long_words': list(filter(lambda w: len(w) >= min_length, words))
     }
 
 
@@ -471,11 +471,11 @@ class TextProcessor:
         """
         count = 0
         for word in self.words:
-            if len(word) > min_length:
+            if len(word) >= min_length:
                 count += 1
         return count
     
-    def process(self) -> Dict:
+    def process(self, min_length: int = 5) -> Dict:
         """
         Verarbeitet Text - verwendet Objektzustand
         OO-Charakteristik: Kann Seiteneffekte haben, arbeitet mit Objektzustand
@@ -484,5 +484,5 @@ class TextProcessor:
             'word_count': len(self.words),
             'longest_word': max(self.words, key=len) if self.words else "",
             'average': sum(len(w) for w in self.words) / len(self.words) if self.words else 0,
-            'long_words': [w for w in self.words if len(w) > 5]
+            'long_words': [w for w in self.words if len(w) >= min_length]
         }
